@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - 'mirror-container-registry/**'
+  workflow_dispatch:
 
 jobs:
   mirror-container-registry:

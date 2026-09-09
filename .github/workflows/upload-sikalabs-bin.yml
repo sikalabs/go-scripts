@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - 'upload-sikalabs-bin/**'
+  workflow_dispatch:
 
 jobs:
   upload-sikalabs-bin:

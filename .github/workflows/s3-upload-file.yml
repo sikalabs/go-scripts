@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - 's3-upload-file/**'
+  workflow_dispatch:
 
 jobs:
   s3-upload-file:
