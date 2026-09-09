@@ -1,0 +1,16 @@
+name: mirror-container-registry
+
+on:
+  push:
+    paths:
+      - 'mirror-container-registry/**'
+  pull_request:
+    paths:
+      - 'mirror-container-registry/**'
+
+jobs:
+  mirror-container-registry:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: mirror-container-registry
+    secrets: inherit
