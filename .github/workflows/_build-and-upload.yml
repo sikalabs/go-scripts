@@ -1,0 +1,37 @@
+name: _build-and-upload
+
+on:
+  workflow_call:
+    inputs:
+      module:
+        required: true
+        type: string
+    secrets:
+      SLR_SIKALABS_UPLOAD_BIN_ACCESS_KEY:
+        required: true
+      SLR_SIKALABS_UPLOAD_BIN_SECRET_KEY:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.26'
+
+      - name: Build linux/amd64
+        working-directory: ${{ inputs.module }}
+        run: GOOS=linux GOARCH=amd64 go build -o ${{ inputs.module }}-linux-amd64
+
+      - name: upload linux/amd64 build
+        working-directory: ${{ inputs.module }}
+        env:
+          SLR_SIKALABS_UPLOAD_BIN_ACCESS_KEY: ${{ secrets.SLR_SIKALABS_UPLOAD_BIN_ACCESS_KEY }}
+          SLR_SIKALABS_UPLOAD_BIN_SECRET_KEY: ${{ secrets.SLR_SIKALABS_UPLOAD_BIN_SECRET_KEY }}
+        run: |
+          curl -O https://sikalabs.fra1.digitaloceanspaces.com/bin/upload-sikalabs-bin-linux-amd64
+          chmod +x upload-sikalabs-bin-linux-amd64
+          ./upload-sikalabs-bin-linux-amd64 ${{ inputs.module }}-linux-amd64
