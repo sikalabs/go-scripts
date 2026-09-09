@@ -64,5 +64,7 @@ func sikalabsUploadBin(filePath string) {
 		return
 	}
 
-	fmt.Printf("Uploaded. Available at https://sikalabs.fra1.cdn.digitaloceanspaces.com/bin/%s\n", path.Base(filePath))
+	fmt.Printf("Uploaded. Available at:")
+	fmt.Printf("  ORIGIN URL: https://sikalabs.fra1.digitaloceanspaces.com/bin/%s\n", path.Base(filePath))
+	fmt.Printf("  CDN URL:    https://sikalabs.fra1.cdn.digitaloceanspaces.com/bin/%s\n", path.Base(filePath))
 }
