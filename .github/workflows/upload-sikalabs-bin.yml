@@ -1,0 +1,16 @@
+name: upload-sikalabs-bin
+
+on:
+  push:
+    paths:
+      - 'upload-sikalabs-bin/**'
+  pull_request:
+    paths:
+      - 'upload-sikalabs-bin/**'
+
+jobs:
+  upload-sikalabs-bin:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: upload-sikalabs-bin
+    secrets: inherit
