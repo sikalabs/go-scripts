@@ -1,0 +1,16 @@
+name: s3-upload-file
+
+on:
+  push:
+    paths:
+      - 's3-upload-file/**'
+  pull_request:
+    paths:
+      - 's3-upload-file/**'
+
+jobs:
+  s3-upload-file:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: s3-upload-file
+    secrets: inherit
