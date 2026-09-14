@@ -1,0 +1,17 @@
+name: kube-port-forward-multi
+
+on:
+  push:
+    paths:
+      - 'kube-port-forward-multi/**'
+  pull_request:
+    paths:
+      - 'kube-port-forward-multi/**'
+  workflow_dispatch:
+
+jobs:
+  kube-port-forward-multi:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: kube-port-forward-multi
+    secrets: inherit
