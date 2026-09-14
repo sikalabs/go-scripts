@@ -8,18 +8,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var FlagNamespace string
 var FlagContext string
 var FlagKubeconfig string
 
 var Cmd = &cobra.Command{
 	Use:   "kube-port-forward-multi <local-port>:<svc/name|pod/name>:<remote-port> [...]",
 	Short: "Run multiple kubectl port-forwards at once",
-	Args:  cobra.MinimumNArgs(1),
+	Long: "Run multiple kubectl port-forwards at once.\n\n" +
+		"Each target is <local-port>:<svc/name|pod/name>:<remote-port> for the current\n" +
+		"namespace, or <local-port>:<namespace/svc/name|namespace/pod/name>:<remote-port>\n" +
+		"to target a specific namespace.",
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		err := port_forward.Run(port_forward.Options{
 			Targets:    args,
-			Namespace:  FlagNamespace,
 			Context:    FlagContext,
 			Kubeconfig: FlagKubeconfig,
 		})
@@ -31,14 +33,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.Flags().StringVarP(
-		&FlagNamespace,
-		"namespace",
-		"n",
-		"",
-		"Kubernetes namespace",
-	)
-
 	Cmd.Flags().StringVar(
 		&FlagContext,
 		"context",

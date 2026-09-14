@@ -15,13 +15,13 @@ import (
 
 type Target struct {
 	LocalPort  string
+	Namespace  string
 	Resource   string
 	RemotePort string
 }
 
 type Options struct {
 	Targets    []string
-	Namespace  string
 	Context    string
 	Kubeconfig string
 }
@@ -30,13 +30,31 @@ func parseTarget(raw string) (Target, error) {
 	parts := strings.Split(raw, ":")
 	if len(parts) != 3 {
 		return Target{}, fmt.Errorf(
-			"invalid target %q, expected <local-port>:<svc/name|pod/name>:<remote-port>",
+			"invalid target %q, expected <local-port>:<svc/name|pod/name>:<remote-port> "+
+				"(optionally <local-port>:<namespace/svc/name|namespace/pod/name>:<remote-port>)",
 			raw,
 		)
 	}
+
+	resourceParts := strings.Split(parts[1], "/")
+	var namespace, resource string
+	switch len(resourceParts) {
+	case 2:
+		resource = parts[1]
+	case 3:
+		namespace = resourceParts[0]
+		resource = resourceParts[1] + "/" + resourceParts[2]
+	default:
+		return Target{}, fmt.Errorf(
+			"invalid resource %q, expected svc/name, pod/name, namespace/svc/name or namespace/pod/name",
+			parts[1],
+		)
+	}
+
 	return Target{
 		LocalPort:  parts[0],
-		Resource:   parts[1],
+		Namespace:  namespace,
+		Resource:   resource,
 		RemotePort: parts[2],
 	}, nil
 }
@@ -80,11 +98,15 @@ func Run(opts Options) error {
 }
 
 func runForward(ctx context.Context, opts Options, t Target) {
-	label := fmt.Sprintf("[%s -> %s:%s]", t.LocalPort, t.Resource, t.RemotePort)
+	target := t.Resource
+	if t.Namespace != "" {
+		target = t.Namespace + "/" + t.Resource
+	}
+	label := fmt.Sprintf("[%s -> %s:%s]", t.LocalPort, target, t.RemotePort)
 
 	args := []string{"port-forward", t.Resource, fmt.Sprintf("%s:%s", t.LocalPort, t.RemotePort)}
-	if opts.Namespace != "" {
-		args = append(args, "-n", opts.Namespace)
+	if t.Namespace != "" {
+		args = append(args, "-n", t.Namespace)
 	}
 	if opts.Context != "" {
 		args = append(args, "--context", opts.Context)
