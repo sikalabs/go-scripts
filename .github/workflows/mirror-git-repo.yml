@@ -1,0 +1,17 @@
+name: mirror-git-repo
+
+on:
+  push:
+    paths:
+      - 'mirror-git-repo/**'
+  pull_request:
+    paths:
+      - 'mirror-git-repo/**'
+  workflow_dispatch:
+
+jobs:
+  mirror-git-repo:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: mirror-git-repo
+    secrets: inherit
