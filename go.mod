@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.3
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.112.0
+	github.com/digitalocean/godo v1.215.0
 	github.com/google/go-containerregistry v0.22.1
 	github.com/hashicorp/vault/api v1.23.0
 	github.com/joho/godotenv v1.5.1
@@ -36,6 +37,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -63,6 +65,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.31.0 // indirect

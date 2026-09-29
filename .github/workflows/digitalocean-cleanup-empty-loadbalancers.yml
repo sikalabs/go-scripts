@@ -1,0 +1,17 @@
+name: digitalocean-cleanup-empty-loadbalancers
+
+on:
+  push:
+    paths:
+      - 'digitalocean-cleanup-empty-loadbalancers/**'
+  pull_request:
+    paths:
+      - 'digitalocean-cleanup-empty-loadbalancers/**'
+  workflow_dispatch:
+
+jobs:
+  digitalocean-cleanup-empty-loadbalancers:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: digitalocean-cleanup-empty-loadbalancers
+    secrets: inherit
