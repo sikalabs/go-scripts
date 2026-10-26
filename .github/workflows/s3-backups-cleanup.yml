@@ -1,0 +1,17 @@
+name: s3-backups-cleanup
+
+on:
+  push:
+    paths:
+      - 's3-backups-cleanup/**'
+  pull_request:
+    paths:
+      - 's3-backups-cleanup/**'
+  workflow_dispatch:
+
+jobs:
+  s3-backups-cleanup:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: s3-backups-cleanup
+    secrets: inherit
