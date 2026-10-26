@@ -1,0 +1,17 @@
+name: install-sikalabs-bin
+
+on:
+  push:
+    paths:
+      - 'install-sikalabs-bin/**'
+  pull_request:
+    paths:
+      - 'install-sikalabs-bin/**'
+  workflow_dispatch:
+
+jobs:
+  install-sikalabs-bin:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: install-sikalabs-bin
+    secrets: inherit
