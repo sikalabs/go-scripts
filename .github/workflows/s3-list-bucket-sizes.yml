@@ -1,0 +1,17 @@
+name: s3-list-bucket-sizes
+
+on:
+  push:
+    paths:
+      - 's3-list-bucket-sizes/**'
+  pull_request:
+    paths:
+      - 's3-list-bucket-sizes/**'
+  workflow_dispatch:
+
+jobs:
+  s3-list-bucket-sizes:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: s3-list-bucket-sizes
+    secrets: inherit
