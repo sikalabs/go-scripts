@@ -14,6 +14,7 @@ var FlagRegion string
 var FlagEndpoint string
 var FlagBucketName string
 var FlagDelete bool
+var FlagYes bool
 
 var Cmd = &cobra.Command{
 	Use:   "s3-backups-cleanup",
@@ -26,6 +27,7 @@ var Cmd = &cobra.Command{
 			Endpoint:   FlagEndpoint,
 			BucketName: FlagBucketName,
 			Delete:     FlagDelete,
+			Yes:        FlagYes,
 		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -83,5 +85,12 @@ func init() {
 		"delete",
 		false,
 		"Actually delete objects (default is dry run)",
+	)
+
+	Cmd.Flags().BoolVar(
+		&FlagYes,
+		"yes",
+		false,
+		"Skip the interactive \"yes\" confirmation, wait 10s (cancel with Ctrl-C) and delete",
 	)
 }

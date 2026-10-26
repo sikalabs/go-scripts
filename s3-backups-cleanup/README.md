@@ -13,6 +13,9 @@ e.g. `sikalabs-com.`), so one bucket can hold backups of multiple sites.
 Objects without a date in the name are skipped and never deleted.
 
 Runs as a dry run by default, use `--delete` to actually delete objects.
+Before deleting, the script asks for confirmation (like `terraform apply`),
+only `yes` is accepted. Use `--yes` to skip it (e.g. in cron), the script
+then waits 10 seconds before deleting, so you can still cancel it with Ctrl-C.
 
 ## Install (master)
 
@@ -63,4 +66,5 @@ s3-backups-cleanup \
   -e, --endpoint string      Custom S3 Endpoint
   -r, --region string        AWS Region (default "us-east-1")
   -s, --secret-key string    AWS Secret Key
+      --yes                  Skip the interactive "yes" confirmation, wait 10s (cancel with Ctrl-C) and delete
 ```

@@ -1,10 +1,14 @@
 package s3_backups_cleanup
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,6 +17,9 @@ import (
 )
 
 const KeepDailyDays = 30
+
+// How long to wait before deleting with --yes, gives time to cancel with Ctrl-C
+const YesDelay = 10 * time.Second
 
 // Matches the date in backup names like sikalabs-com.2026-10-22_18-05-09_mqk.sql.gz
 var backupDateRegexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}`)
@@ -26,6 +33,7 @@ type Options struct {
 	Endpoint   string
 	BucketName string
 	Delete     bool
+	Yes        bool
 }
 
 type Object struct {
@@ -61,16 +69,38 @@ func S3BackupsCleanup(opts Options) error {
 
 	keep := objectsToKeep(objects, time.Now())
 
-	deleted := 0
+	var toDelete []Object
 	for _, obj := range objects {
 		if keep[obj.Key] {
 			fmt.Printf("KEEP   %s  %s\n", obj.Date.Format(time.RFC3339), obj.Key)
 			continue
 		}
-		if !opts.Delete {
-			fmt.Printf("DELETE %s  %s (dry run)\n", obj.Date.Format(time.RFC3339), obj.Key)
-			continue
+		fmt.Printf("DELETE %s  %s\n", obj.Date.Format(time.RFC3339), obj.Key)
+		toDelete = append(toDelete, obj)
+	}
+
+	fmt.Printf("\nKeep %d, delete %d objects\n", len(keep), len(toDelete))
+
+	if !opts.Delete {
+		fmt.Println("Dry run, use --delete to delete")
+		return nil
+	}
+
+	if len(toDelete) == 0 {
+		return nil
+	}
+
+	if opts.Yes {
+		if !waitForCancel() {
+			fmt.Println("Delete cancelled.")
+			return nil
 		}
+	} else if !confirm() {
+		fmt.Println("Delete cancelled.")
+		return nil
+	}
+
+	for _, obj := range toDelete {
 		_, err := client.DeleteObject(ctx, &s3.DeleteObjectInput{
 			Bucket: aws.String(opts.BucketName),
 			Key:    aws.String(obj.Key),
@@ -78,18 +108,43 @@ func S3BackupsCleanup(opts Options) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete s3://%s/%s: %w", opts.BucketName, obj.Key, err)
 		}
-		fmt.Printf("DELETE %s  %s\n", obj.Date.Format(time.RFC3339), obj.Key)
-		deleted++
+		fmt.Printf("Deleted %s\n", obj.Key)
 	}
 
-	toDelete := len(objects) - len(keep)
-	if opts.Delete {
-		fmt.Printf("\nKept %d, deleted %d objects\n", len(keep), deleted)
-	} else {
-		fmt.Printf("\nWould keep %d, would delete %d objects (dry run, use --delete to delete)\n", len(keep), toDelete)
-	}
+	fmt.Printf("\nDeleted %d objects\n", len(toDelete))
 
 	return nil
+}
+
+// confirm asks the user to type "yes" (like terraform apply)
+func confirm() bool {
+	fmt.Println()
+	fmt.Println("Do you want to delete these objects?")
+	fmt.Println("  Only 'yes' will be accepted to approve.")
+	fmt.Println()
+	fmt.Print("  Enter a value: ")
+
+	answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	fmt.Println()
+
+	return strings.TrimSpace(answer) == "yes"
+}
+
+// waitForCancel waits YesDelay and returns false if the user pressed Ctrl-C
+func waitForCancel() bool {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt)
+	defer signal.Stop(sigs)
+
+	fmt.Printf("\nDeleting in %s, press Ctrl-C to cancel...\n", YesDelay)
+
+	select {
+	case <-sigs:
+		fmt.Println()
+		return false
+	case <-time.After(YesDelay):
+		return true
+	}
 }
 
 // listObjects returns objects with a date in the name and keys of objects without it
