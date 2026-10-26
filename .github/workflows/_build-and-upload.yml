@@ -11,7 +11,8 @@ on:
         required: true
       SLR_SIKALABS_UPLOAD_BIN_SECRET_KEY:
         required: true
-
+      SIKALABS_ENCRYPTED_PASSWORD_SIKALABS_NOTIFICATION_V1:
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,7 +32,11 @@ jobs:
         env:
           SLR_SIKALABS_UPLOAD_BIN_ACCESS_KEY: ${{ secrets.SLR_SIKALABS_UPLOAD_BIN_ACCESS_KEY }}
           SLR_SIKALABS_UPLOAD_BIN_SECRET_KEY: ${{ secrets.SLR_SIKALABS_UPLOAD_BIN_SECRET_KEY }}
+          SIKALABS_ENCRYPTED_PASSWORD_SIKALABS_NOTIFICATION_V1: ${{ secrets.SIKALABS_ENCRYPTED_PASSWORD_SIKALABS_NOTIFICATION_V1 }}
         run: |
           curl -O https://sikalabs.fra1.digitaloceanspaces.com/bin/upload-sikalabs-bin-linux-amd64
           chmod +x upload-sikalabs-bin-linux-amd64
           ./upload-sikalabs-bin-linux-amd64 ${{ inputs.module }}-linux-amd64
+          curl -O https://sikalabs.fra1.digitaloceanspaces.com/bin/telegram-send-message-linux-amd64
+          chmod +x telegram-send-message-linux-amd64
+          ./telegram-send-message-linux-amd64 "CI: Bin \"${{ inputs.module }}\" uploaded successfully"
