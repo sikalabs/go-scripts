@@ -1,0 +1,17 @@
+name: telegram-send-message
+
+on:
+  push:
+    paths:
+      - 'telegram-send-message/**'
+  pull_request:
+    paths:
+      - 'telegram-send-message/**'
+  workflow_dispatch:
+
+jobs:
+  telegram-send-message:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: telegram-send-message
+    secrets: inherit
