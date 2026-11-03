@@ -1,0 +1,17 @@
+name: digitalocean-cleanup-unused-volumes
+
+on:
+  push:
+    paths:
+      - 'digitalocean-cleanup-unused-volumes/**'
+  pull_request:
+    paths:
+      - 'digitalocean-cleanup-unused-volumes/**'
+  workflow_dispatch:
+
+jobs:
+  digitalocean-cleanup-unused-volumes:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: digitalocean-cleanup-unused-volumes
+    secrets: inherit
