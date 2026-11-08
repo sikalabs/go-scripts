@@ -24,5 +24,13 @@ or with the password from the env var
 KEEPASS_MASTER_PASSWORD=changeme keepass-to-yaml secrets.kdbx secrets.yaml
 ```
 
+or with the password from a file (trailing newline is stripped)
+
+```bash
+keepass-to-yaml secrets.kdbx secrets.yaml --password-file ./password.txt
+```
+
+`--password` and `--password-file` cannot be combined; both take precedence over `KEEPASS_MASTER_PASSWORD`.
+
 The output YAML contains the master password and all secrets in plain text
 and is written with `0600` permissions.
