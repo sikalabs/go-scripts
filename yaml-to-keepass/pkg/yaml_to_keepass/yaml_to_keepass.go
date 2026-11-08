@@ -9,10 +9,17 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
+const FormatVersion = 1
+
+type Metadata struct {
+	Version int `yaml:"version"`
+}
+
 type Config struct {
-	MasterPassword string  `yaml:"master_password"`
-	Entries        []Entry `yaml:"entries"`
-	Groups         []Group `yaml:"groups"`
+	Metadata       Metadata `yaml:"metadata"`
+	MasterPassword string   `yaml:"master_password"`
+	Entries        []Entry  `yaml:"entries"`
+	Groups         []Group  `yaml:"groups"`
 }
 
 type Group struct {
@@ -37,6 +44,9 @@ func readConfig(path string) (*Config, error) {
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse %s: %w", path, err)
+	}
+	if config.Metadata.Version != FormatVersion {
+		return nil, fmt.Errorf("unsupported metadata.version %d in %s (expected %d)", config.Metadata.Version, path, FormatVersion)
 	}
 	if config.MasterPassword == "" {
 		config.MasterPassword = os.Getenv("KEEPASS_MASTER_PASSWORD")

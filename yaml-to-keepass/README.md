@@ -17,6 +17,8 @@ yaml-to-keepass secrets.yaml secrets.kdbx
 ## Input Format
 
 ```yaml
+metadata:
+  version: 1
 master_password: changeme
 entries:
   - title: Example
@@ -34,6 +36,8 @@ groups:
       - name: Nested
         entries: []
 ```
+
+`metadata.version` is required and must be `1`.
 
 `master_password` can be omitted from the YAML and set via the
 `KEEPASS_MASTER_PASSWORD` env var instead.
