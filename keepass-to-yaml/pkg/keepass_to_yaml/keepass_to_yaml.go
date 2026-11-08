@@ -1,6 +1,7 @@
 package keepass_to_yaml
 
 import (
+	"bytes"
 	"os"
 
 	"github.com/tobischo/gokeepasslib/v3"
@@ -76,11 +77,16 @@ func KeepassToYaml(inputPath, outputPath, password string) error {
 		config.Groups = buildGroups(roots, recycleBin)
 	}
 
-	data, err := yaml.Marshal(&config)
-	if err != nil {
+	var buf bytes.Buffer
+	encoder := yaml.NewEncoder(&buf)
+	encoder.SetIndent(2)
+	if err := encoder.Encode(&config); err != nil {
 		return err
 	}
-	return os.WriteFile(outputPath, data, 0600)
+	if err := encoder.Close(); err != nil {
+		return err
+	}
+	return os.WriteFile(outputPath, buf.Bytes(), 0600)
 }
 
 func buildGroups(groups []gokeepasslib.Group, recycleBin *gokeepasslib.UUID) []Group {
