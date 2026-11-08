@@ -1,0 +1,17 @@
+name: yaml-to-keepass
+
+on:
+  push:
+    paths:
+      - 'yaml-to-keepass/**'
+  pull_request:
+    paths:
+      - 'yaml-to-keepass/**'
+  workflow_dispatch:
+
+jobs:
+  yaml-to-keepass:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: yaml-to-keepass
+    secrets: inherit
