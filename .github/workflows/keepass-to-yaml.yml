@@ -1,0 +1,17 @@
+name: keepass-to-yaml
+
+on:
+  push:
+    paths:
+      - 'keepass-to-yaml/**'
+  pull_request:
+    paths:
+      - 'keepass-to-yaml/**'
+  workflow_dispatch:
+
+jobs:
+  keepass-to-yaml:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: keepass-to-yaml
+    secrets: inherit
