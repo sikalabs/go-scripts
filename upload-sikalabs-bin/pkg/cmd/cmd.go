@@ -12,7 +12,7 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "sikalabs-upload-bin",
+	Use:   "upload-sikalabs-bin <file>",
 	Short: "Upload a binary to Sikalabs S3 (on DigitalOcean)",
 	Args:  cobra.ExactArgs(1),
 	Run: func(c *cobra.Command, args []string) {
