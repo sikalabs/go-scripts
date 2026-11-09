@@ -1,0 +1,23 @@
+name: sikalabs-go-scripts
+
+on:
+  push:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/sikalabs-go-scripts.yml'
+  pull_request:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/sikalabs-go-scripts.yml'
+  workflow_dispatch:
+
+jobs:
+  sikalabs-go-scripts:
+    uses: ./.github/workflows/_build-and-upload.yml
+    with:
+      module: sikalabs-go-scripts
+    secrets: inherit
