@@ -1,9 +1,13 @@
 package digitalocean_cleanup_unused_volumes
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/digitalocean/godo"
 )
@@ -14,7 +18,18 @@ var eligibleTeamUUIDs = map[string]string{
 	"531319e3-3988-4578-a9fd-ec94e22df877": "SikaLabs DEV",
 }
 
-func checkTeam(ctx context.Context, client *godo.Client) {
+// productionTeamUUIDs is the allowlist of production teams. Deleting volumes
+// in these teams requires an explicit interactive confirmation.
+var productionTeamUUIDs = map[string]string{
+	"928fd8dd-5d60-43b3-a253-f54aea41e7f0": "SikaLabs PROD",
+}
+
+const productionConfirmText = "THIS IS PRODUCTION"
+const productionWait = 10 * time.Second
+
+// checkTeam verifies the token's team is eligible and reports whether it is
+// a production team.
+func checkTeam(ctx context.Context, client *godo.Client) bool {
 	account, _, err := client.Account.Get(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get account: %v", err)
@@ -22,10 +37,44 @@ func checkTeam(ctx context.Context, client *godo.Client) {
 	if account.Team == nil {
 		log.Fatalf("Token is not associated with any team")
 	}
+	if _, ok := productionTeamUUIDs[account.Team.UUID]; ok {
+		fmt.Printf("Team: %s (%s) [PRODUCTION]\n", account.Team.Name, account.Team.UUID)
+		return true
+	}
 	if _, ok := eligibleTeamUUIDs[account.Team.UUID]; !ok {
 		log.Fatalf("Team %s (%s) is not eligible for cleanup", account.Team.Name, account.Team.UUID)
 	}
 	fmt.Printf("Team: %s (%s)\n", account.Team.Name, account.Team.UUID)
+	return false
+}
+
+func countdown(d time.Duration) {
+	for i := int(d.Seconds()); i > 0; i-- {
+		fmt.Printf("\r%d ", i)
+		time.Sleep(time.Second)
+	}
+	fmt.Print("\r   \r")
+}
+
+// confirmProduction waits, asks the user to type the confirmation text and
+// waits again. Exits the program if the confirmation does not match.
+func confirmProduction() {
+	fmt.Println()
+	fmt.Println("!!! WARNING: YOU ARE ABOUT TO DELETE VOLUMES IN PRODUCTION !!!")
+	fmt.Printf("Waiting %s before confirmation (Ctrl+C to abort)...\n", productionWait)
+	countdown(productionWait)
+
+	fmt.Printf("Type \"%s\" to continue: ", productionConfirmText)
+	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		log.Fatalf("Failed to read confirmation: %v", err)
+	}
+	if strings.TrimSpace(line) != productionConfirmText {
+		log.Fatalf("Confirmation does not match, aborting")
+	}
+
+	fmt.Printf("Deleting in %s (Ctrl+C to abort)...\n", productionWait)
+	countdown(productionWait)
 }
 
 func listVolumes(ctx context.Context, client *godo.Client) ([]godo.Volume, error) {
@@ -61,43 +110,57 @@ func DigitalOceanCleanupUnusedVolumes(token string, delete bool) {
 	ctx := context.Background()
 	client := godo.NewFromToken(token)
 
-	checkTeam(ctx, client)
+	production := checkTeam(ctx, client)
 
 	volumes, err := listVolumes(ctx, client)
 	if err != nil {
 		log.Fatalf("Failed to list volumes: %v", err)
 	}
 
-	found := 0
+	var unused []godo.Volume
 	var totalSize int64
 	for _, v := range volumes {
 		if !isUnused(v) {
 			continue
 		}
-		found++
+		unused = append(unused, v)
 		totalSize += v.SizeGigaBytes
+	}
 
-		region := ""
-		if v.Region != nil {
-			region = v.Region.Slug
-		}
+	if len(unused) == 0 {
+		fmt.Println("No unused volumes found.")
+		fmt.Println("Done!")
+		return
+	}
 
-		if !delete {
-			fmt.Printf("Would delete volume: %s (%s, %s, %d GB)\n", v.Name, v.ID, region, v.SizeGigaBytes)
-			continue
-		}
+	for _, v := range unused {
+		fmt.Printf("Unused volume: %s (%s, %s, %d GB)\n", v.Name, v.ID, regionSlug(v), v.SizeGigaBytes)
+	}
+	fmt.Printf("Found %d unused volume(s) (%d GB total).\n", len(unused), totalSize)
 
-		fmt.Printf("Deleting volume: %s (%s, %s, %d GB)\n", v.Name, v.ID, region, v.SizeGigaBytes)
+	if !delete {
+		fmt.Println("Run with --delete to delete them.")
+		fmt.Println("Done!")
+		return
+	}
+
+	if production {
+		confirmProduction()
+	}
+
+	for _, v := range unused {
+		fmt.Printf("Deleting volume: %s (%s, %s, %d GB)\n", v.Name, v.ID, regionSlug(v), v.SizeGigaBytes)
 		if _, err := client.Storage.DeleteVolume(ctx, v.ID); err != nil {
 			log.Fatalf("Failed to delete volume %s: %v", v.ID, err)
 		}
 	}
 
-	if found == 0 {
-		fmt.Println("No unused volumes found.")
-	} else if !delete {
-		fmt.Printf("Found %d unused volume(s) (%d GB total). Run with --delete to delete them.\n", found, totalSize)
-	}
-
 	fmt.Println("Done!")
+}
+
+func regionSlug(v godo.Volume) string {
+	if v.Region == nil {
+		return ""
+	}
+	return v.Region.Slug
 }

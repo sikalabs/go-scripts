@@ -8,6 +8,11 @@ For safety, the script only runs against teams listed in the static
 `eligibleTeamUUIDs` allowlist in the source code. The team of the token is
 checked first and the script exits for any other team.
 
+Production teams are listed separately in `productionTeamUUIDs`. Deleting
+volumes in a production team requires an interactive confirmation: a mandatory
+10 second wait, typing `THIS IS PRODUCTION`, and another 10 second wait before
+the volumes are deleted. Dry run works without confirmation.
+
 ## Install (master)
 
 ```
